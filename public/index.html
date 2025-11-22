@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Key Generator</title>
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Georgia:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #f3e9d3;
+            --paper: #ffffff;
+            --ink: #2a2a2a;
+            --teal: #009c9a;
+            --teal-dark: #007d7b;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: "Georgia", serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-card {
+            background: var(--paper);
+            width: 420px;
+            border-radius: 10px;
+            padding: 25px 28px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        h3 {
+            font-size: 1.9rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: .9rem;
+            color: #666;
+            margin-bottom: 14px;
+        }
+
+        .form-label {
+            font-weight: bold;
+            font-size: .95rem;
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            font-family: Georgia, serif;
+            border: 1px solid #c8c8c8;
+            border-radius: 6px;
+            font-size: .95rem;
+            background: #fffefc;
+        }
+
+        .form-control:focus {
+            border-color: var(--teal);
+            box-shadow: 0 0 5px rgba(0, 156, 154, .4);
+            outline: none;
+        }
+
+        .btn-main {
+            width: 100%;
+            background: var(--teal);
+            border: 1px solid var(--teal-dark);
+            color: white;
+            border-radius: 6px;
+            padding: 11px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: .15s;
+            margin-top: 5px;
+        }
+
+        .btn-main:hover {
+            background: var(--teal-dark);
+        }
+
+        .btn-main:disabled {
+            opacity: 0.5;
+        }
+
+        .output-box {
+            width: 100%;
+            background: #f6f2e9;
+            border: 1px solid #d3c8b5;
+            border-radius: 6px;
+            font-size: .95rem;
+            padding: 10px;
+            font-family: monospace;
+            text-align: center;
+        }
+
+        .btn-copy {
+            width: 100%;
+            background: var(--teal-dark);
+            border-radius: 6px;
+            color: white;
+            padding: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: .15s;
+        }
+
+        .btn-copy:hover {
+            background: #005f5d;
+        }
+
+        .btn-copy:disabled {
+            opacity: 0.5;
+        }
+
+        .bottom-links {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        .bottom-links a {
+            text-decoration: none;
+            color: var(--ink);
+            font-weight: bold;
+            font-size: .9rem;
+        }
+
+        .bottom-links a:hover {
+            text-decoration: underline;
+        }
+
+        #messageArea {
+            font-size: .9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-card">
+        <h3>API Key Generator</h3>
+        <p class="subtitle">Create a new API key instantly</p>
+        <hr>
+
+        <form id="generateForm" class="mb-3">
+
+            <label class="form-label">First Name</label>
+            <input type="text" id="firstName" class="form-control mb-3" required>
+
+            <label class="form-label">Last Name</label>
+            <input type="text" id="lastName" class="form-control mb-3" required>
+
+            <label class="form-label">Email</label>
+            <input type="email" id="email" class="form-control mb-4" required>
+
+            <button type="submit" id="generateKeyBtn" class="btn-main">
+                Generate API Key
+            </button>
+        </form>
+
+        <label class="form-label">Generated Key</label>
+        <input type="text" id="apiKeyOutput" class="output-box mb-3" value="Waiting..." readonly>
+
+        <button id="copyKeyBtn" class="btn-copy mb-2" disabled>
+            Copy
+        </button>
+
+        <p id="messageArea" class="text-center fw-semibold mt-2"></p>
+
+        <hr>
+
+        <div class="bottom-links">
+            <a href="register.html">Admin Register</a>
+            <a href="login.html">Admin Login</a>
+        </div>
+    </div>
+
+<script>
+    const API_REGISTER_URL = 'http://localhost:3000/user/register';
+
+    document.getElementById('generateForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const firstName = document.getElementById('firstName').value;
+        const lastName = document.getElementById('lastName').value;
+        const email = document.getElementById('email').value;
+
+        const outputField = document.getElementById('apiKeyOutput');
+        const copyBtn = document.getElementById('copyKeyBtn');
+        const messageArea = document.getElementById('messageArea');
+        const submitBtn = document.getElementById('generateKeyBtn');
+
+        outputField.value = "Processing...";
+        messageArea.textContent = "";
+        submitBtn.disabled = true;
+        copyBtn.disabled = true;
+
+        try {
+            const response = await fetch(API_REGISTER_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ firstName, lastName, email }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                outputField.value = data.apiKey;
+                copyBtn.disabled = false;
+
+                messageArea.textContent = "Success. Valid until: " + new Date(data.expires).toLocaleDateString();
+                messageArea.style.color = "green";
+            } else {
+                outputField.value = "Registration Failed";
+                messageArea.textContent = data.error || data.message || "Error";
+                messageArea.style.color = "red";
+            }
+
+        } catch (err) {
+            outputField.value = "Connection Error";
+            messageArea.textContent = "Server unreachable.";
+            messageArea.style.color = "red";
+        }
+
+        submitBtn.disabled = false;
+    });
+
+    document.getElementById('copyKeyBtn').addEventListener('click', () => {
+        const outputField = document.getElementById('apiKeyOutput');
+        navigator.clipboard.writeText(outputField.value);
+
+        const msg = document.getElementById('messageArea');
+        msg.textContent = "Copied!";
+        msg.style.color = "#007d7b";
+
+        setTimeout(() => msg.textContent = "", 1500);
+    });
+</script>
+
+</body>
+</html>
